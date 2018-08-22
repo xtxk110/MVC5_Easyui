@@ -1,0 +1,43 @@
+﻿/*元素样式修改*/
+body {font-family:"microsoft yahei";}
+ul {list-style:none;margin:0px;padding:0px;}
+a {text-decoration:none;outline:none;}
+/*layout 头部区域*/
+#header {background-color:#d2e0f2;height:70px;overflow:hidden;}
+#header .logo {display:block;margin:5px;height:60px;}
+#header .top-btns {position:absolute;top:20px;right:15px;}
+#header .top-btns span {vertical-align:middle;}
+/*layout 左侧菜单区域*/
+#naver {width:220px;}
+#navmenu {border:none;}
+.navmenu {margin-top:5px;}
+.navmenu li {margin:10px 15px;}
+.navmenu li a {
+	display:block;
+	height:32px;
+	line-height:32px;
+	padding-left:36px;
+	font-size:14px;
+	font-weight:bold;
+	color:#333;
+	border:1px solid #fff;
+	background-repeat:no-repeat;
+	background-position:10px center;
+	background-image:url("../img/item-default.png");
+}
+.navmenu li.active a,
+.navmenu li a:hover {color:#1542a4;background-color:#e0ecff;border-color:#99bbe8;}
+/*layout 中间内容区域*/
+#content {border:none;}
+.inner-header {padding:0px 0px 10px 0px;border:none;}
+.inner-header a {margin-right:3px;}
+.tree-div {width:240px;border:none;border-top:1px solid #95B8E7;}
+.tree-div .easyui-tree {margin:10px;}
+.inner-content {padding-left:15px;border:none;}
+.inner-content .datagrid {border-top:1px solid #95B8E7;}
+/*layout 底部区域*/
+#footer {height:35px;line-height:28px;text-align:center;font-weight:bold;color:#1542a4;background:#d2e0f2;overflow:hidden;}
+
+/*用户页面*/
+.user-div{margin-bottom:10px}
+.dialog-panel-title,.dialog-panel-title .panel-title{font-size:14px}

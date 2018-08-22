@@ -1,0 +1,65 @@
+﻿@section ExtHead{
+    <link rel="stylesheet" href="~/Content/home.css" />
+    <script type="text/javascript" src="~/Scripts/CustomJs.js"></script>
+    }
+
+<div region="north" id="header">
+    @*<img src="img/logo.png" class="logo" />*@
+    <div class="top-btns">
+        <span>欢迎您，@ViewBag.Name</span>
+        <a href="javascript:void()" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lock'">修改密码</a>
+        <a href="javascript:void()" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-clear'">退出系统</a>
+    </div>
+</div>
+
+<div region="west" split="true" title="导航菜单" id="naver">
+    <div class="easyui-accordion" fit="true" id="navmenu">
+        <div title="测试">
+            <ul class="navmenu">
+                <li><a href="#" data-url="/User/Show">组织机构管理</a></li>
+            </ul>
+        </div>
+        
+    </div>
+</div>
+
+<div region="center" id="content">
+    <div class="easyui-tabs" fit="true" id="tt">
+
+        <div title="首页" iconCls="icon-ok">
+            <div class="easyui-accordion" data-options="fit:true">
+                <div title="待办事项">
+                    
+                </div>
+                <div title="系统公告">
+                    
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div region="south" id="footer">@ViewBag.Footer</div>
+<script type="text/javascript">
+    $(function () {
+        //添加新的Tab页
+        $("#navmenu").on("click", "a[data-url]", function (e) {
+            e.preventDefault();
+            var tabTitle = $(this).text();
+            var tabUrl = $(this).data("url");
+
+            if ($("#tt").tabs("exists", tabTitle)) { //判断该Tab页是否已经存在
+                $("#tt").tabs("select", tabTitle);
+            } else {
+                $("#tt").tabs("add", {
+                    title: tabTitle,
+                    href: tabUrl,
+                    closable: true
+                });
+            }
+            $("#navmenu .active").removeClass("active");
+            $(this).parent().addClass("active");
+        });
+    });
+</script>

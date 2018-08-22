@@ -1,0 +1,36 @@
+﻿@model MvcEasyui.Models.UserInfo
+@{
+    Layout = null;
+}
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>@ViewBag.Title</title>
+        @Styles.Render("~/easyui/css")
+        @Scripts.Render("~/jquery_min")
+        @Scripts.Render("~/jquery-val")
+        @Scripts.Render("~/easyui")
+        <link rel="stylesheet" href="~/Content/login.css" />
+    </head>
+    <body >
+        <div class="panel" style="">
+            <form method="post">
+                <div >
+                    @Html.TextBoxFor(m => m.User, new { @class = "easyui-textbox", prompt = "Username", iconWidth = "28", style = "width:100%;height:34px;padding:10px;" })
+                </div>
+                <div >
+                    @Html.TextBoxFor(m => m.Pwd, new { @class = "easyui-passwordbox", prompt = "Password", iconWidth = "28", style = "width:100%;height:34px;padding:10px;" })
+                </div>
+                <div >
+                    <input type="submit"  value="LOGIN" >
+                </div>
+            </form>
+            @Html.ValidationMessage("error", new { style = "display:block;width:100%;text-align:center;font-size:14px;color:red;margin-top:-16px" })
+        </div>
+        @Html.Partial("Footer");
+    </body>
+</html>
+

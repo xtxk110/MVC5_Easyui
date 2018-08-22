@@ -1,0 +1,6 @@
+﻿html,body{border:none;outline:none}
+body{background:url("/Content/img/login_bac.jpg") no-repeat  #87CEFA ;background-color:lightblue;background-size:cover;}
+.panel{position:absolute;width:300px;height:140px;padding:60px 60px;border-radius:5px;border:1px solid #fff;left:50%;top:40%;margin-top:-90px;margin-left:-150px}
+form>div{margin-bottom:20px}
+input[type="submit"]{width:100%;padding:5px;border:1px solid #d3d3d3;font-size:18px;border-radius:5px;background-color:#fff;color:red}
+input[type="submit"]:hover{border:1px solid yellow}
