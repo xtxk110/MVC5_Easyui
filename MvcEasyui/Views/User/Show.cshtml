@@ -24,8 +24,8 @@
     </thead>
 </table>
 @Html.Partial("DialogButton")
-<div id="dialog_add" headerCls="dialog-panel-title" modal="true" buttons="#buttons" style="padding:10px 10px;" 
-      data-options="closed:true">
+<div id="dialog_add" class="easyui-dialog" headerCls="dialog-panel-title" modal="true" buttons="#buttons" style="padding:10px 10px;" 
+      data-options="closed:true,onBeforeClose:FormClear('fm_add')">
     <form id="fm_add" method="post">
         <input id="Id" name="Id" type="hidden" />
         <div class="user-div">

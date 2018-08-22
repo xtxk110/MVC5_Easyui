@@ -58,20 +58,34 @@ namespace MvcEasyui
 
             using (IDbConnection conn = DbConnection.Instance())
             {
-                string insert = "INSERT INTO Sys_User VALUES(@id,@code,@pwd,@name,@orgId,@posId,@isEnable,@isDefault,@comment,@createDate)";
-                int result = conn.Execute(insert, new { id = user.Id, name = user.Name, code = user.Code, pwd = user.Pwd, orgId = user.OrgId, posId = user.PosId, isEnable = user.IsEnable, isDefault = user.IsDefault, comment = user.Comment, createDate = user.CreateDate });
-                if (user.RoleId != null && user.RoleId.Count > 0&&result>0)//增加用户角色
+                int result = -1;
+                IDbTransaction tran=null;
+                try
                 {
-                    insert = "INSERT INTO Sys_UserRole VALUES(@id,@userId,@roleId,@createDate)";
-                    List<object> list = new List<object>();
-                    foreach(var item in user.RoleId)
+                    tran = conn.BeginTransaction();
+                    string insert = "INSERT INTO Sys_User VALUES(@id,@code,@pwd,@name,@orgId,@posId,@isEnable,@isDefault,@comment,@createDate)";
+                    result = conn.Execute(insert, new { id = user.Id, name = user.Name, code = user.Code, pwd = user.Pwd, orgId = user.OrgId, posId = user.PosId, isEnable = user.IsEnable, isDefault = user.IsDefault, comment = user.Comment, createDate = user.CreateDate },tran);
+                    if (user.RoleId != null && user.RoleId.Count > 0 && result > 0)//增加用户角色
                     {
-                        list.Add(new { id = Guid.NewGuid().ToString("N"), userId = user.Id, roleId = item, createDate = DateTime.Now });
+                        string insert1 = "INSERT INTO Sys_UserRole VALUES(@id,@userId,@roleId,@createDate)";
+                        List<object> list = new List<object>();
+                        foreach (var item in user.RoleId)
+                        {
+                            list.Add(new { id = Guid.NewGuid().ToString("N"), userId = user.Id, roleId = item, createDate = DateTime.Now });
+                        }
+                        result += conn.Execute(insert1, list,tran);
                     }
-                    result = conn.Execute(insert, list);
+                    tran.Commit();
+                    return Common.AjaxInfo(result, "INSERT");
+                }
+                catch(Exception e)
+                {
+                    result = -1;
+                    tran.Rollback();
+                    return Common.AjaxInfo(result, "INSERT",e.Message);
                 }
 
-                return Common.AjaxInfo(result, "INSERT");
+                
 
             }
         }
@@ -79,20 +93,32 @@ namespace MvcEasyui
         {
             using (IDbConnection conn = DbConnection.Instance())
             {
-                string update = @" DELETE FROM Sys_UserRole  WHERE UserId=@id 
-                                   UPDATE Sys_User SET Code=@code,Name=@name,PosId=@posId,OrgId=@orgId,IsEnable=@isEnable,Comment=@comment WHERE Id=@id ";
-                int result = conn.Execute(update, new { id = user.Id, code = user.Code, name = user.Name, orgId = user.OrgId, posId = user.PosId, isEnable = user.IsEnable, comment = user.Comment });
-                if (user.RoleId != null && user.RoleId.Count > 0 )//增加用户角色
+                int result = -1;
+                IDbTransaction tran = null;
+                try
                 {
-                    string insert = "INSERT INTO Sys_UserRole VALUES(@id,@userId,@roleId,@createDate)";
-                    List<object> list = new List<object>();
-                    foreach (var item in user.RoleId)
+                    tran= conn.BeginTransaction();
+                    string update = @" DELETE FROM Sys_UserRole  WHERE UserId=@id 
+                                   UPDATE Sys_User SET Code=@code,Name=@name,PosId=@posId,OrgId=@orgId,IsEnable=@isEnable,Comment=@comment WHERE Id=@id ";
+                    result = conn.Execute(update, new { id = user.Id, code = user.Code, name = user.Name, orgId = user.OrgId, posId = user.PosId, isEnable = user.IsEnable, comment = user.Comment },tran);
+                    if (user.RoleId != null && user.RoleId.Count > 0)//增加用户角色
                     {
-                        list.Add(new { id = Guid.NewGuid().ToString("N"), userId = user.Id, roleId = item, createDate = DateTime.Now });
+                        string insert = "INSERT INTO Sys_UserRole VALUES(@id,@userId,@roleId,@createDate)";
+                        List<object> list = new List<object>();
+                        foreach (var item in user.RoleId)
+                        {
+                            list.Add(new { id = Guid.NewGuid().ToString("N"), userId = user.Id, roleId = item, createDate = DateTime.Now });
+                        }
+                        result += conn.Execute(insert, list,tran);
                     }
-                    result = conn.Execute(insert, list);
+                    tran.Commit();
+                    return Common.AjaxInfo(result, "UPDATE");
+                }catch(Exception e)
+                {
+                    result = -1;
+                    tran.Rollback();
+                    return Common.AjaxInfo(result, "UPDATE",e.Message);
                 }
-                return Common.AjaxInfo(result, "UPDATE");
             }
         }
         /// <summary>
