@@ -24,6 +24,16 @@ function ShowInfo(title, msg) {
         showType: 'show'
     });
 }
+//用于用户TITLE显示角色,行中必须有RoleName 数组
+function ShowRole(value, row, index) {
+    if (row.RoleName.length > 0) {
+        var t = row.RoleName.join("\n\t");
+        t = "所属角色:\n\t" + t;
+        return '<span title="' + t + '" style="color:blue">' + value + '</span>'
+    } else {
+        return value;
+    }
+}
 
 //使用easyui 清除表单数据
 function FormClear(formId) {
@@ -31,7 +41,7 @@ function FormClear(formId) {
 }
 //使用easyui from提交方式,自动序列化from表单为对应的JSON对象
 //参数: form id 选择器(不包含#),url 提交的服务地址,dialogId easyui-dialog id,datagrid_id
-function FormSubmit(id, url,data,dialogId,datagrid_id) {
+function FormSubmit(id, url,data,dialogId,datagrid_id,datagrid_url) {
     $("#" + id).form('submit', {
         //url: url,
         onSubmit: function () {
@@ -49,7 +59,7 @@ function FormSubmit(id, url,data,dialogId,datagrid_id) {
                     success: function (data) {
                         if (data.Result) {
                             $("#" + dialogId).dialog('close'); $("#" + id).form('clear');
-                            $("#" + datagrid_id).datagrid('load', {url:'/User/Get'});
+                            $("#" + datagrid_id).datagrid('load', { url: datagrid_url});
                         } else
                             ShowInfo("ErrorInfo", data.Msg);
                     },
@@ -92,11 +102,10 @@ function UserViewInit() {
             fn: function (r) {
                 if (r) {
                     if ($("#dialog_add").dialog('options').title.indexOf("查询") > -1) {
-                        //$("#dg").datagrid({ url: "/User/Get?" + $("#fm_add").serialize() });
-                        $("#dg").datagrid('load', { Name: 'ad' });
+                        $("#dg").datagrid('load', $("#fm_add").serializeObject());
                         $("#dialog_add").dialog('close');
                     } else
-                        FormSubmit("fm_add", "/User/Save", $("#fm_add").serialize(), "dialog_add", "dg");
+                        FormSubmit("fm_add", "/User/Save", $("#fm_add").serialize(), "dialog_add", "dg","/User/Get");
                 } else
                     return false;
             }
@@ -112,15 +121,16 @@ function UserViewInit() {
         $("#Pwd").textbox({ required: true });
         $("#Code").textbox({ required: true });
         $("#Name").textbox({ required: true });
-        $("#OrgId").combotree({ required: true }).combotree({ url: '/Org/Get' });
-        $("#PosId").combotree({ required: true }).combotree({ url: '/Pos/Get' });
-        $("#RoleId").combobox({ required: true }).combobox({ url: '/Role/Get' });
+        $("#OrgId").combotree({ required: true, url: '/Org/Get' });
+        $("#PosId").combotree({ required: true, url: '/Pos/Get' });
+        $("#RoleId").combobox({ required: true, url: '/Role/Get' });
         $("#div-pwd").show();
         $("#comment-div").show();
         $("#div-enable").hide();
         $("#Id").val("");
         $("#dialog_add").dialog({
-            title: '增加用户'
+            title: '增加用户',
+            onBeforeClose: FormClear('fm_add')
         }).dialog('open');
     });
     $("#btn_edit").on("click", function (e) {
@@ -137,6 +147,10 @@ function UserViewInit() {
         $("#div-pwd").hide();
         $("#div-enable").show();
         $("#comment-div").show();
+        $("#dialog_add").dialog({
+            title: '编辑用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
         $("#Id").val(rows[0].Id);
         $("#Code").textbox({ required: true }).textbox('setValue', rows[0].Code);
         $("#Name").textbox({ required: true }).textbox('setValue', rows[0].Name);
@@ -147,9 +161,7 @@ function UserViewInit() {
         if (rows[0].IsEnable == true)
             $("#IsEnable").switchbutton('check');
         $("#Comment").textbox('setValue', rows[0].Comment);
-        $("#dialog_add").dialog({
-            title: '编辑用户'
-        }).dialog('open');
+       
     });
     $("#btn_query").on("click", function (e) {
         e.preventDefault();
@@ -163,7 +175,8 @@ function UserViewInit() {
         $("#PosId").combotree({ required: false, url: '/Pos/Get' });
         $("#RoleId").combotree({ required: false, url: '/Role/Get' });
         $("#dialog_add").dialog({
-            title: '查询用户'
+            title: '查询用户',
+            onBeforeClose: FormClear('fm_add')
         }).dialog('open');
     });
     $("#btn_delete").on("click", function (e) {
@@ -190,6 +203,8 @@ function UserViewInit() {
                         success: function (data) {
                             if (data.Result)
                                 $("#dg").datagrid('load', { url: '/User/Get' });
+                            else
+                                ShowInfo("ErrorInfo", data.Msg);
                         },
                         error: function (XMLHttpRequest, textStatus, errorThrown) {
                             ShowInfo("ErrorInfo", textStatus);
@@ -203,4 +218,443 @@ function UserViewInit() {
     });
 }
 
-//------------------------------------------------------------------------------------------------
+//----------------------------------------部门界面特定JS--------------------------------------------------------
+function OrgViewInit() {
+    $('#dg_org').datagrid({
+        url:'/Org/GetAll',
+        view: detailview,
+        detailFormatter: function (index, row) {
+            return '<div style="padding:2px;position:relative;"><table class="ddv"></table></div>';
+        },
+        onExpandRow: function (index, row) {
+            var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
+            ddv.datagrid({
+                url: '/Org/GetUser?id=' + row.Id,
+                fitColumns: true,
+                singleSelect: true,
+                rownumbers: true,
+                loadMsg: '',
+                height: 'auto',
+                columns: [[
+                    { field: 'RoleName', align: 'center', hidden:true },
+                    { field: 'Code', title: '账号', align:'center', width:20},
+                    {field: 'Name', title: '姓名', align: 'center', width: 20, formatter:ShowRole},
+                    { field: 'PosName', title: '职位', align: 'center', width: 20 },
+                    { field: 'IsEnable', title: '是否启用', align: 'center', width: 10 },
+                    { field: 'Comment', title: '备注', align: 'center', width: 30 }
+                ]],
+                onResize: function () {
+                    $('#dg_org').datagrid('fixDetailRowHeight', index);
+                },
+                onLoadSuccess: function () {
+                    setTimeout(function () {
+                        $('#dg_org').datagrid('fixDetailRowHeight', index);
+                    }, 0);
+                }
+            });
+            $('#dg_org').datagrid('fixDetailRowHeight', index);
+        }
+    });
+    $("#btn-ok").on("click", function (e) {
+        e.preventDefault();
+        $.messager.confirm({
+            title: '提示',
+            msg: '确定此操作吗?',
+            fn: function (r) {
+                if (r) {
+                    if ($("#dialog_add").dialog('options').title.indexOf("查询") > -1) {
+                        $("#temp").val($("#Name").textbox('getText'));
+                        $("#dg_org").datagrid('load', { Name: $("#Name").textbox('getText') });
+                        $("#dialog_add").dialog('close');
+                    } else
+                        FormSubmit("fm_add", "/Org/Save", $("#fm_add").serialize(), "dialog_add", "dg_org","/Org/GetAll");
+                } else
+                    return false;
+            }
+        });
+
+    });
+    $("#btn-cancel").on("click", function (e) {
+        e.preventDefault();
+        $("#dialog_add").dialog('close');
+    });
+    $("#btn_add").on("click", function (e) {
+        e.preventDefault();
+        $("#Name").textbox({ required: true });
+        $("#ParentId").combobox({ url: '/Org/GetOrgCombo' });
+        $("#comment-div").show();
+        $("#div-parent").show();
+        $("#div-enable").hide();
+        $("#Id").val("");
+        $("#dialog_add").dialog({
+            title: '增加用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+    });
+    $("#btn_edit").on("click", function (e) {
+        e.preventDefault();
+        var rows = $("#dg_org").datagrid('getSelections');
+        if (rows.length == 0) {
+            ShowInfo("ErrorInfo", "请选择一条数据,再编辑");
+            return false;
+        }
+        if (rows.length > 1) {
+            ShowInfo("ErrorInfo", "不能同时多条数据编辑");
+            return false;
+        }
+        $("#div-enable").show();
+        $("#comment-div").show();
+        $("#div-parent").hide();
+        $("#dialog_add").dialog({
+            title: '编辑用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+        $("#Id").val(rows[0].Id);
+        $("#Name").textbox({ required: true }).textbox('setValue', rows[0].Name);
+        if (rows[0].IsEnable == true)
+            $("#IsEnable").switchbutton('check');
+        $("#Comment").textbox('setValue', rows[0].Comment);
+        
+    });
+    $("#btn_query").on("click", function (e) {
+        e.preventDefault();
+        $("#div-enable").hide();
+        $("#comment-div").hide();
+        $("#div-parent").hide();
+        $("#Name").textbox({ required: false });
+        $("#dialog_add").dialog({
+            title: '查询用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+        $("#Name").textbox('setText', $("#temp").val());
+    });
+    $("#btn_delete").on("click", function (e) {
+        e.preventDefault();
+        var rows = $("#dg_org").datagrid('getSelections');
+        if (rows.length == 0) {
+            ShowInfo("ErrorInfo", "至少选择一条数据");
+            return false;
+        }
+        $.messager.confirm({
+            title: '提示',
+            msg: '确定删除吗?',
+            fn: function (r) {
+                if (r) {
+                    var idArr = [];
+                    for (i = 0; i < rows.length; i++) {
+                        idArr.push(rows[i].Id);
+                    }
+                    $.ajax({
+                        url: '/Org/Del',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: { id: idArr },
+                        success: function (data) {
+                            if (data.Result)
+                                $("#dg_org").datagrid('load', { url: '/Org/ GetAll' });
+                            else
+                                ShowInfo("ErrorInfo", data.Msg);
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            ShowInfo("ErrorInfo", textStatus);
+                        }
+                    });
+                } else
+                    return false;
+            }
+        });
+
+    });
+}
+//-----------------------------------------职位界面特定JS-------------------------------------------------------------------
+function PosViewInit() {
+    $('#dg_pos').datagrid({
+        url: '/Pos/GetAll',
+        view: detailview,
+        detailFormatter: function (index, row) {
+            return '<div style="padding:2px;position:relative;"><table class="ddv"></table></div>';
+        },
+        onExpandRow: function (index, row) {
+            var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
+            ddv.datagrid({
+                url: '/Pos/GetUser?id=' + row.Id,
+                fitColumns: true,
+                singleSelect: true,
+                rownumbers: true,
+                loadMsg: '',
+                height: 'auto',
+                columns: [[
+                    { field: 'RoleName', align: 'center', hidden: true },
+                    { field: 'Code', title: '账号', align: 'center', width: 20 },
+                    { field: 'Name', title: '姓名', align: 'center', width: 20, formatter: ShowRole },
+                    { field: 'OrgName', title: '部门', align: 'center', width: 20 },
+                    { field: 'IsEnable', title: '是否启用', align: 'center', width: 10 },
+                    { field: 'Comment', title: '备注', align: 'center', width: 30 }
+                ]],
+                onResize: function () {
+                    $('#dg_pos').datagrid('fixDetailRowHeight', index);
+                },
+                onLoadSuccess: function () {
+                    setTimeout(function () {
+                        $('#dg_pos').datagrid('fixDetailRowHeight', index);
+                    }, 0);
+                }
+            });
+            $('#dg_pos').datagrid('fixDetailRowHeight', index);
+        }
+    });
+    $("#btn-ok").on("click", function (e) {
+        e.preventDefault();
+        $.messager.confirm({
+            title: '提示',
+            msg: '确定此操作吗?',
+            fn: function (r) {
+                if (r) {
+                    if ($("#dialog_add").dialog('options').title.indexOf("查询") > -1) {
+                        $("#temp").val($("#Name").textbox('getText'));
+                        $("#dg_pos").datagrid('load', { Name: $("#Name").textbox('getText') });
+                        $("#dialog_add").dialog('close');
+                    } else
+                        FormSubmit("fm_add", "/Pos/Save", $("#fm_add").serialize(), "dialog_add", "dg_pos", "/Pos/GetAll");
+                } else
+                    return false;
+            }
+        });
+
+    });
+    $("#btn-cancel").on("click", function (e) {
+        e.preventDefault();
+        $("#dialog_add").dialog('close');
+    });
+    $("#btn_add").on("click", function (e) {
+        e.preventDefault();
+        $("#Name").textbox({ required: true });
+        $("#ParentId").combobox({ url: '/Pos/GetPosCombo' });
+        $("#comment-div").show();
+        $("#div-parent").show();
+        $("#div-enable").hide();
+        $("#Id").val("");
+        $("#dialog_add").dialog({
+            title: '增加用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+    });
+    $("#btn_edit").on("click", function (e) {
+        e.preventDefault();
+        var rows = $("#dg_pos").datagrid('getSelections');
+        if (rows.length == 0) {
+            ShowInfo("ErrorInfo", "请选择一条数据,再编辑");
+            return false;
+        }
+        if (rows.length > 1) {
+            ShowInfo("ErrorInfo", "不能同时多条数据编辑");
+            return false;
+        }
+        $("#div-enable").show();
+        $("#comment-div").show();
+        $("#div-parent").hide();
+        $("#dialog_add").dialog({
+            title: '编辑用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+        $("#Id").val(rows[0].Id);
+        $("#Name").textbox({ required: true }).textbox('setValue', rows[0].Name);
+        if (rows[0].IsEnable == true)
+            $("#IsEnable").switchbutton('check');
+        $("#Comment").textbox('setValue', rows[0].Comment);
+
+    });
+    $("#btn_query").on("click", function (e) {
+        e.preventDefault();
+        $("#div-enable").hide();
+        $("#comment-div").hide();
+        $("#div-parent").hide();
+        $("#Name").textbox({ required: false });
+        $("#dialog_add").dialog({
+            title: '查询用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+        $("#Name").textbox('setText', $("#temp").val());
+    });
+    $("#btn_delete").on("click", function (e) {
+        e.preventDefault();
+        var rows = $("#dg_pos").datagrid('getSelections');
+        if (rows.length == 0) {
+            ShowInfo("ErrorInfo", "至少选择一条数据");
+            return false;
+        }
+        $.messager.confirm({
+            title: '提示',
+            msg: '确定删除吗?',
+            fn: function (r) {
+                if (r) {
+                    var idArr = [];
+                    for (i = 0; i < rows.length; i++) {
+                        idArr.push(rows[i].Id);
+                    }
+                    $.ajax({
+                        url: '/Pos/Del',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: { id: idArr },
+                        success: function (data) {
+                            if (data.Result)
+                                $("#dg_pos").datagrid('load', { url: '/Pos/ GetAll' });
+                            else
+                                ShowInfo("ErrorInfo", data.Msg);
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            ShowInfo("ErrorInfo", textStatus);
+                        }
+                    });
+                } else
+                    return false;
+            }
+        });
+
+    });
+}
+//------------------------------------------角色界面特定JS--------------------------------------------------------------------------
+function RoleViewInit() {
+    $('#dg_role').datagrid({
+        url: '/Role/GetAll',
+        view: detailview,
+        detailFormatter: function (index, row) {
+            return '<div style="padding:2px;position:relative;"><table class="ddv"></table></div>';
+        },
+        onExpandRow: function (index, row) {
+            var ddv = $(this).datagrid('getRowDetail', index).find('table.ddv');
+            ddv.datagrid({
+                url: '/Role/GetUser?id=' + row.Id,
+                fitColumns: true,
+                singleSelect: true,
+                rownumbers: true,
+                loadMsg: '',
+                height: 'auto',
+                columns: [[
+                    { field: 'Code', title: '账号', align: 'center', width: 20 },
+                    { field: 'Name', title: '姓名', align: 'center', width: 20 },
+                    { field: 'OrgName', title: '部门', align: 'center', width: 10 },
+                    { field: 'PosName', title: '职位', align: 'center', width: 10 },
+                    { field: 'IsEnable', title: '是否启用', align: 'center', width: 10 },
+                    { field: 'Comment', title: '备注', align: 'center', width: 30 }
+                ]],
+                onResize: function () {
+                    $('#dg_role').datagrid('fixDetailRowHeight', index);
+                },
+                onLoadSuccess: function () {
+                    setTimeout(function () {
+                        $('#dg_role').datagrid('fixDetailRowHeight', index);
+                    }, 0);
+                }
+            });
+            $('#dg_role').datagrid('fixDetailRowHeight', index);
+        }
+    });
+    $("#btn-ok").on("click", function (e) {
+        e.preventDefault();
+        $.messager.confirm({
+            title: '提示',
+            msg: '确定此操作吗?',
+            fn: function (r) {
+                if (r) {
+                    if ($("#dialog_add").dialog('options').title.indexOf("查询") > -1) {
+                        $("#temp").val($("#Name").textbox('getText'));
+                        $("#dg_role").datagrid('load', { Name: $("#Name").textbox('getText') });
+                        $("#dialog_add").dialog('close');
+                    } else
+                        FormSubmit("fm_add", "/Role/Save", $("#fm_add").serialize(), "dialog_add", "dg_role", "/Role/GetAll");
+                } else
+                    return false;
+            }
+        });
+
+    });
+    $("#btn-cancel").on("click", function (e) {
+        e.preventDefault();
+        $("#dialog_add").dialog('close');
+    });
+    $("#btn_add").on("click", function (e) {
+        e.preventDefault();
+        $("#Name").textbox({ required: true });
+        $("#comment-div").show();
+        $("#div-enable").hide();
+        $("#Id").val("");
+        $("#dialog_add").dialog({
+            title: '增加用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+    });
+    $("#btn_edit").on("click", function (e) {
+        e.preventDefault();
+        var rows = $("#dg_role").datagrid('getSelections');
+        if (rows.length == 0) {
+            ShowInfo("ErrorInfo", "请选择一条数据,再编辑");
+            return false;
+        }
+        if (rows.length > 1) {
+            ShowInfo("ErrorInfo", "不能同时多条数据编辑");
+            return false;
+        }
+        $("#div-enable").show();
+        $("#comment-div").show();
+        $("#dialog_add").dialog({
+            title: '编辑用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+        $("#Id").val(rows[0].Id);
+        $("#Name").textbox({ required: true }).textbox('setValue', rows[0].Name);
+        if (rows[0].IsEnable == true)
+            $("#IsEnable").switchbutton('check');
+        $("#Comment").textbox('setValue', rows[0].Comment);
+
+    });
+    $("#btn_query").on("click", function (e) {
+        e.preventDefault();
+        $("#div-enable").hide();
+        $("#comment-div").hide();
+        $("#Name").textbox({ required: false });
+        $("#dialog_add").dialog({
+            title: '查询用户',
+            onBeforeClose: FormClear('fm_add')
+        }).dialog('open');
+        $("#Name").textbox('setText', $("#temp").val());
+    });
+    $("#btn_delete").on("click", function (e) {
+        e.preventDefault();
+        var rows = $("#dg_role").datagrid('getSelections');
+        if (rows.length == 0) {
+            ShowInfo("ErrorInfo", "至少选择一条数据");
+            return false;
+        }
+        $.messager.confirm({
+            title: '提示',
+            msg: '确定删除吗?',
+            fn: function (r) {
+                if (r) {
+                    var idArr = [];
+                    for (i = 0; i < rows.length; i++) {
+                        idArr.push(rows[i].Id);
+                    }
+                    $.ajax({
+                        url: '/Role/Del',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: { id: idArr },
+                        success: function (data) {
+                            if (data.Result)
+                                $("#dg_role").datagrid('load', { url: '/Role/ GetAll' });
+                            else
+                                ShowInfo("ErrorInfo", data.Msg);
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            ShowInfo("ErrorInfo", textStatus);
+                        }
+                    });
+                } else
+                    return false;
+            }
+        });
+
+    });
+}

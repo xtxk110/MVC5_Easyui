@@ -13,10 +13,14 @@ namespace MvcEasyui.Controllers
     public class RoleController : BaseController
     {
         // GET: Role
-        public ActionResult Index()
+        public ActionResult Show()
         {
             return View();
         }
+        /// <summary>
+        /// 显示下拉列表用
+        /// </summary>
+        /// <returns></returns>
         [HttpPost]
         [Ajax]
         public JsonResult Get()
@@ -44,6 +48,72 @@ namespace MvcEasyui.Controllers
                 return Json(all);
             }
            
+        }
+        /// <summary>
+        /// 获取角色列表,不分页
+        /// </summary>
+        /// <param name="Name">角色名称</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Ajax]
+        public JsonResult GetAll(string Name)
+        {
+            var list = DbHelper.GetRoleList(Name, false);
+            return Json(list);
+        }
+        /// <summary>
+        /// 获取角色下的用户列表
+        /// </summary>
+        /// <param name="id">角色ID</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Ajax]
+        public JsonResult GetUser(string id)
+        {
+            var list = DbHelper.GetUserByRole(id);
+            return Json(list);
+        }
+        /// <summary>
+        /// 新增,编辑
+        /// </summary>
+        /// <param name="model">RoleViewModel</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Ajax]
+        public JsonResult Save(RoleViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.Id))//新增
+            {
+                var role = DbHelper.GetRole();
+                if (role == null)
+                    model.Id =  "0001";
+                else
+                {
+                    var temp = Int64.Parse(role.Id) + 1;
+                    model.Id = temp.ToString().PadLeft(role.Id.Length, '0');
+                }
+                model.IsDefault = false;
+                model.IsEnable = true;
+                model.CreateDate = DateTime.Now;
+                return Json(DbHelper.SaveRole(model));
+            }
+            else
+            {
+                var json = DbHelper.EditRole(model);
+                return Json(json);
+            }
+        }
+        /// <summary>
+        /// 删除角色
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Ajax]
+        public JsonResult Del(List<string> id)
+        {
+            var result = DbHelper.DelRole(id);
+            return Json(result);
         }
     }
 }

@@ -56,5 +56,9 @@ namespace MvcEasyui.Models
         /// </summary>
         public string Comment { get; set; }
         public DateTime CreateDate { get; set; }
+        /// <summary>
+        /// 用户对应的角色名称;返回显示使用
+        /// </summary>
+        public List<string> RoleName { get; set; }
     }
 }

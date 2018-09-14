@@ -12,7 +12,7 @@
             <th field="Id" width="0" align="center" hidden="hidden" ></th>
             <th field="OrgId" width="0" align="center" hidden="hidden"></th>
             <th field="PosId" width="0" align="center" hidden="hidden"></th>
-            <th field="Name" width="10" align="center" sortable="true">姓名</th>
+            <th field="Name" width="10" align="center" sortable="true" formatter="ShowRole">姓名</th>
             <th field="Code" width="10" align="center" sortable="true">账号</th>
             <th field="OrgName" width="20" align="center" sortable="true">部门名称</th>
             <th field="PosName" width="20" align="center" sortable="true">职位名称</th>
@@ -25,7 +25,7 @@
 </table>
 @Html.Partial("DialogButton")
 <div id="dialog_add" class="easyui-dialog" headerCls="dialog-panel-title" modal="true" buttons="#buttons" style="padding:10px 10px;" 
-      data-options="closed:true,onBeforeClose:FormClear('fm_add')">
+      data-options="closed:true">
     <form id="fm_add" method="post">
         <input id="Id" name="Id" type="hidden" />
         <div class="user-div">

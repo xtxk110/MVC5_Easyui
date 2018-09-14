@@ -10,7 +10,7 @@ namespace MvcEasyui
         /// <summary>
         /// ajax访问返回特定信息(不包括数据查询)
         /// </summary>
-        /// <param name="execResult">数据库执行(EXECUTE)返回的结果,0为未更改任何行数</param>
+        /// <param name="execResult">数据库执行(EXECUTE)返回的结果,-1,执行失败</param>
         /// <param name="action">对应的操作类型</param>
         /// <param name="ext">额外的返回信息</param>
         /// <returns></returns>

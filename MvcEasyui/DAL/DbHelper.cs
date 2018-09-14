@@ -38,7 +38,7 @@ namespace MvcEasyui
                 parameters.Add("@roleId", current.Request["RoleId"]);
 
                 result.rows = conn.Query<UserViewModel>("sp_GetUserList", parameters, commandType: CommandType.StoredProcedure).ToList();
-                if (result.total == 0)
+                if (current.PageIndex == 1)
                     result.total = parameters.Get<int>("@total");
 
             }
@@ -54,7 +54,7 @@ namespace MvcEasyui
             //检查登录账号是否重复
             UserViewModel single = GetUser(user.Code);
             if (single != null)
-                return Common.AjaxInfo(0, "INSERT", "账号重复");
+                return Common.AjaxInfo(-1, "INSERT", "账号重复");
 
             using (IDbConnection conn = DbConnection.Instance())
             {
@@ -143,7 +143,7 @@ namespace MvcEasyui
         /// <param name="idList"></param>
         public static ResultInfo DelUser(List<string> idList)
         {
-            string del = "DELETE FROM Sys_User WHERE Id IN @idList";
+            string del = "DELETE FROM Sys_User WHERE Id IN @idList    DELETE FROM Sys_UserRole WHERE UserId IN @idList  ";
            
             using (IDbConnection conn = DbConnection.Instance())
             {
@@ -155,12 +155,13 @@ namespace MvcEasyui
             
         }
         #endregion
+
         #region 部门操作
         /// <summary>
-        /// 获取所有部门列表,数量不会很多,不分页
+        /// 获取所有部门列表,数量不会很多,不分页   
+        /// </summary>
         /// <param name="orgName">部门名称</param>
         /// <param name="onlyEnable">是否只查询可用的</param>
-        /// </summary>
         /// <returns></returns>
         public static List<OrgViewModel> GetOrgList(string orgName, bool onlyEnable)
         {
@@ -270,7 +271,161 @@ namespace MvcEasyui
                 }
             }
         }
+        /// <summary>
+        /// 获取相应部门的用户,包括下级部门
+        /// </summary>
+        /// <param name="orgId">部门ID</param>
+        /// <returns></returns>
+        public static List<UserViewModel> GetUserListByOrg(string orgId)
+        {
+            string sql = "SELECT a.Id,a.Code,a.Name,a.IsEnable,a.Comment,b.Name PosName FROM Sys_User a LEFT JOIN Sys_Positional b ON a.PosId=b.Id WHERE CHARINDEX(@orgId, a.OrgId)>0 ORDER BY a.Name ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                return conn.Query<UserViewModel>(sql, new { orgId=orgId }).ToList();
+            }
+        }
+        /// <summary>
+        /// 获取相应部门所有的上级部门
+        /// </summary>
+        /// <param name="orgId">部门ID</param>
+        /// <returns></returns>
+        public static List<OrgViewModel> GetOrgListById(string orgId)
+        {
+            string sql = "SELECT * FROM Sys_Organization WHERE CHARINDEX(Id, @orgId)>0 ORDER BY Id ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                return conn.Query<OrgViewModel>(sql, new { orgId=orgId }).ToList();
+            }
+        }
+        public static List<ComboboxModel> GetOrgCombo(List<OrgViewModel> list)
+        {
+            List<ComboboxModel> result = new List<ComboboxModel>();
+            foreach (var item in list)
+            {
+                result.Add(new ComboboxModel { id = item.Id, text = item.Name });
+            }
+            return result;
+        }
+        /// <summary>
+        /// 根据父级ID获取ID长度相同且最大的对象
+        /// </summary>
+        /// <param name="parentId">上级ID</param>
+        /// <returns></returns>
+        public static OrgViewModel GetOrg(string parentId)
+        {
+            string sql = "SELECT TOP 1 * FROM Sys_Organization WHERE ISNULL(ParentId, '') = @parentId ORDER BY Id DESC ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                var list= conn.Query<OrgViewModel>(sql, new { parentId = parentId }).ToList();
+                if (list.Count > 0)
+                    return list[0];
+                else
+                    return null;
+            }
+        }
+        /// <summary>
+        /// 根据部门名称获取部门
+        /// </summary>
+        /// <param name="name">部门名称</param>
+        /// <returns></returns>
+        public static OrgViewModel GetOrg1(string name)
+        {
+            string sql = "SELECT TOP 1 * FROM Sys_Organization WHERE Name=@name ORDER BY Id DESC ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                var list = conn.Query<OrgViewModel>(sql, new { name = name }).ToList();
+                if (list.Count > 0)
+                    return list[0];
+                else
+                    return null;
+            }
+        }
+        /// <summary>
+        /// 部门新增
+        /// </summary>
+        /// <param name="model">OrgViewModel</param>
+        /// <returns></returns>
+        public static ResultInfo SaveOrg(OrgViewModel model)
+        {
+            var org = GetOrg1(model.Name);
+            if (org != null)
+                return Common.AjaxInfo(-1,"INSERT", "部门名称重复");
+            else
+            {
+                try
+                {
+                    using (IDbConnection conn = DbConnection.Instance())
+                    {
+                        string insert = "INSERT Sys_Organization VALUES (@Id,@ParentId,@Name,@IsDefault,@IsEnable,@Comment,@CreateDate)";
+                        int result= conn.Execute(insert, model);
+                        return Common.AjaxInfo(result, "INSERT");
+                    }
+                }catch(Exception e)
+                {
+                    return Common.AjaxInfo(-1, "INSERT", e.Message);
+                }
+            }
+        }
+        /// <summary>
+        /// 部门编辑
+        /// </summary>
+        /// <param name="model">OrgViewModel</param>
+        /// <returns></returns>
+        public static ResultInfo EditOrg(OrgViewModel model)
+        {
+            
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string update = "UPDATE Sys_Organization SET Name=@Name,Comment=@Comment,IsEnable=@IsEnable WHERE Id=@Id ";
+                    int result = conn.Execute(update, model);
+                    return Common.AjaxInfo(result, "UPDATE");
+                }
+            }
+            catch (Exception e)
+            {
+                return Common.AjaxInfo(-1, "UPDATE", e.Message);
+            }
+        }
+
+        public static ResultInfo DelOrg(List<string> id)
+        {
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string sql = "SELECT * FROM Sys_User WHERE OrgId IN @orgId ";
+                    var list = conn.Query<UserViewModel>(sql, new { orgId = id }).ToList();
+                    if (list.Count > 0)
+                        return Common.AjaxInfo(-1, "DELETE", "此部门已创建用户,不能删除");
+                    list = null;
+
+                    string del = "DELETE Sys_Organization WHERE Id IN @Id ";
+                    DynamicParameters dp = new DynamicParameters();
+                    dp.Add("@Id", id);
+                    int result = conn.Execute(del, dp);
+                    return Common.AjaxInfo(result, "DELETE");
+                }
+            }
+            catch (Exception e)
+            {
+                return Common.AjaxInfo(-1, "DELETE", e.Message);
+            }
+        }
+
+        public static List<string> GetRoleByUser(string userId)
+        {
+            string sql = "SELECT a.Name FROM Sys_Role a INNER JOIN Sys_UserRole b ON a.Id=b.RoleId WHERE b.UserId =@userId ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                var list = conn.Query<string>(sql, new { userId = userId }).ToList();
+                return list;
+            }
+        }
+
         #endregion
+
         #region 职位操作
         /// <summary>
         /// 获取所有职位列表,数量不会很多,不分页
@@ -302,6 +457,14 @@ namespace MvcEasyui
             }
         }
 
+        public static List<PositionalViewModel> GetPosALL(string posName,bool onlyEnable)
+        {
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                return conn.Query<PositionalViewModel>("sp_GetPosList", new { isOnlyEnable = onlyEnable, name = posName }, commandType: CommandType.StoredProcedure).ToList();
+            }
+        }
+
         /// <summary>
         ///职位转换成TREE结构
         /// </summary>
@@ -320,7 +483,123 @@ namespace MvcEasyui
             }
 
         }
+        /// <summary>
+        /// 获取对应职位的用户,包含下级职位
+        /// </summary>
+        /// <param name="posId"></param>
+        /// <returns></returns>
+        public static List<UserViewModel> GetUserByPos(string posId)
+        {
+            string sql = "SELECT a.Id,a.Code,a.Name,a.IsEnable,a.Comment,b.Name OrgName FROM Sys_User a LEFT JOIN Sys_Organization b ON a.OrgId=b.Id WHERE CHARINDEX(@posId, a.PosId)>0 ORDER BY a.Name ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                return conn.Query<UserViewModel>(sql, new { posId = posId }).ToList();
+            }
+        }
+
+        public static ResultInfo DelPos(List<string> posId)
+        {
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string sql = "SELECT * FROM Sys_User WHERE PosId IN @posId ";
+                    var list = conn.Query<UserViewModel>(sql, new { posId = posId }).ToList();
+                    if (list.Count > 0)
+                        return Common.AjaxInfo(-1, "DELETE", "此职位已创建用户,不能删除");
+                    list = null;
+
+                    string del = "DELETE Sys_Positional WHERE Id IN @Id ";
+                    DynamicParameters dp = new DynamicParameters();
+                    dp.Add("@Id", posId);
+                    int result = conn.Execute(del, dp);
+                    return Common.AjaxInfo(result, "DELETE");
+                }
+            }
+            catch (Exception e)
+            {
+                return Common.AjaxInfo(-1, "DELETE", e.Message);
+            }
+        }
+        public static List<ComboboxModel> GetPosCombo(List<PositionalViewModel> list)
+        {
+            List<ComboboxModel> result = new List<ComboboxModel>();
+            foreach (var item in list)
+            {
+                result.Add(new ComboboxModel { id = item.Id, text = item.Name });
+            }
+            return result;
+        }
+        /// <summary>
+        /// 根据父级ID获取ID长度相同且最大的职位对象
+        /// </summary>
+        /// <param name="parentId">上级ID</param>
+        /// <returns></returns>
+        public static OrgViewModel GetPos(string parentId)
+        {
+            string sql = "SELECT TOP 1 * FROM Sys_Positional WHERE ISNULL(ParentId, '') = @parentId ORDER BY Id DESC ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                var list = conn.Query<OrgViewModel>(sql, new { parentId = parentId }).ToList();
+                if (list.Count > 0)
+                    return list[0];
+                else
+                    return null;
+            }
+        }
+        /// <summary>
+        /// 新增职位
+        /// </summary>
+        /// <param name="model">PositionalViewModel</param>
+        /// <returns></returns>
+        public static ResultInfo SavePos(PositionalViewModel model)
+        {
+            try
+            {
+                string sql = "SELECT * FROM Sys_Positional WHERE Name=@Name ";
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    var list = conn.Query<PositionalViewModel>(sql, new { Name = model.Name }).ToList();
+                    if (list.Count > 0)
+                        return Common.AjaxInfo(-1, "INSERT", "职位名称相同");
+
+                    list = null;
+                    sql = "INSERT Sys_Positional VALUES (@Id,@ParentId,@Name,@IsDefault,@IsEnable,@Comment,@CreateDate)";
+                    var result = conn.Execute(sql, model);
+                    return Common.AjaxInfo(result, "INSERT");
+
+                }
+            }
+            catch(Exception e)
+            {
+                return Common.AjaxInfo(-1, "INSERT", e.Message);
+            }
+        }
+        /// <summary>
+        /// 编辑
+        /// </summary>
+        /// <param name="model">PositionalViewModel</param>
+        /// <returns></returns>
+        public static ResultInfo EditPos(PositionalViewModel model)
+        {
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    
+                    string sql = "UPDATE Sys_Positional SET Name=@Name,Comment=@Comment,IsEnable=@IsEnable WHERE Id=@Id";
+                    var result = conn.Execute(sql, model);
+                    return Common.AjaxInfo(result, "UPDATE");
+
+                }
+            }
+            catch (Exception e)
+            {
+                return Common.AjaxInfo(-1, "UPDATE", e.Message);
+            }
+        }
         #endregion
+
         #region 角色操作
         /// <summary>
         /// 获取角色列表
@@ -359,6 +638,108 @@ namespace MvcEasyui
                 return conn.Query<RoleViewModel>(sql, dp).ToList();
             }
         }
+        /// <summary>
+        /// 获取角色下的用户列表
+        /// </summary>
+        /// <param name="roleId"></param>
+        /// <returns></returns>
+        public static List<UserViewModel> GetUserByRole(string roleId)
+        {
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                string sql = @"SELECT a.*,b.Name PosName,c.Name OrgName FROM Sys_User a LEFT JOIN Sys_Positional b ON a.PosId=b.Id LEFT JOIN Sys_Organization c ON a.OrgId=c.Id 
+                              LEFT JOIN Sys_UserRole d ON a.Id = d.UserId WHERE d.RoleId = @roleId ";
+                DynamicParameters dp = new DynamicParameters();
+                dp.Add("@roleId", roleId);
+                return conn.Query<UserViewModel>(sql, dp).ToList();
+            }
+        }
+        /// <summary>
+        /// 获取ID值最大的一个ROLE对象
+        /// </summary>
+        /// <returns></returns>
+        public static RoleViewModel GetRole()
+        {
+            string sql = " SELECT TOP 1 * FROM Sys_Role ORDER BY Id DESC ";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                var list= conn.Query<RoleViewModel>(sql).ToList();
+                if (list.Count > 0)
+                    return list[0];
+                else
+                    return null;
+            }
+        }
+        /// <summary>
+        /// 新增角色
+        /// </summary>
+        /// <param name="model">RoleViewModel</param>
+        /// <returns></returns>
+        public static ResultInfo SaveRole(RoleViewModel model)
+        {
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string sql = "SELECT * FROM Sys_Role WHERE Name=@Name ";
+                    var list = conn.Query<RoleViewModel>(sql, model).ToList();
+                    if (list.Count > 0)
+                        return Common.AjaxInfo(-1, "INSERT", "角色名重复");
+
+                    list = null;
+                    sql = "INSERT INTO Sys_Role VALUES(@Id,@Name,@IsDefault,@IsEnable,@Comment,@CreateDate) ";
+                    int result = conn.Execute(sql, model);
+                    return Common.AjaxInfo(result, "INSERT");
+                }
+            }
+            catch(Exception e)
+            {
+                return Common.AjaxInfo(-1, "INSERT", e.Message);
+            }
+        }
+        /// <summary>
+        /// 编辑角色
+        /// </summary>
+        /// <param name="model">RoleViewModel</param>
+        /// <returns></returns>
+        public static ResultInfo EditRole(RoleViewModel model)
+        {
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string sql = "UPDATE Sys_Role SET Name=@Name,Comment=@Comment,IsEnable=@IsEnable WHERE Id=@Id ";
+                    int result = conn.Execute(sql, model);
+                    return Common.AjaxInfo(result, "UPDATE");
+                }
+            }
+            catch (Exception e) { return Common.AjaxInfo(-1, "UPDATE", e.Message); }
+        }
+
+        public static ResultInfo DelRole(List<string> roleId)
+        {
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string sql = "SELECT UserId FROM Sys_UserRole WHERE RoleId IN @roleId ";
+                    var list = conn.Query<string>(sql, new { roleId = roleId }).ToList();
+                    if(list.Count>0)
+                        return Common.AjaxInfo(-1, "DELETE", "角色包含用户,不能删除");
+
+                    list = null;
+                    sql = "DELETE FROM Sys_Role WHERE Id IN @roleId ";
+                    int result = conn.Execute(sql, new { roleId = roleId });
+                    return Common.AjaxInfo(result, "DELETE");
+                }
+            }catch(Exception e)
+            {
+                return Common.AjaxInfo(-1, "DELETE", e.Message);
+            }
+        }
+        #endregion
+
+        #region 权限菜单
         #endregion
 
     }

@@ -21,6 +21,10 @@ namespace MvcEasyui.Controllers
         public JsonResult Get()
         {
             var data= DbHelper.GetUserList(this,false);
+            foreach(var item in data.rows)
+            {
+                item.RoleName = DbHelper.GetRoleByUser(item.Id);
+            }
             return Json(data);
         }
         [HttpPost]

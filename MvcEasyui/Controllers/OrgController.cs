@@ -13,15 +13,88 @@ namespace MvcEasyui.Controllers
     public class OrgController : BaseController
     {
         // GET: Org
+        [Ajax]
+        [HttpPost]
         public ActionResult Show()
         {
             return View();
         }
+        [Ajax]
+        [HttpPost]
         public JsonResult Get()
         {
             List<OrgViewModel> list = DbHelper.GetOrgList(null,true);
             List<TreeModel> result = new List<TreeModel>();
             DbHelper.SetOrgTreeList(result, list);
+            return Json(result);
+        }
+        [Ajax]
+        [HttpPost]
+        public JsonResult GetAll(string Name)
+        {
+            var list = DbHelper.GetOrgList(Name, false);
+            return Json(list);
+        }
+        /// <summary>
+        /// 获取相应部门的用户
+        /// </summary>
+        /// <param name="id">部门ID</param>
+        /// <returns></returns>
+        [Ajax]
+        [HttpPost]
+        public JsonResult GetUser(string id)
+        {
+            var list = DbHelper.GetUserListByOrg(id);
+            foreach(var item in list)
+            {
+                item.RoleName = DbHelper.GetRoleByUser(item.Id);
+            }
+            return Json(list);
+        }
+        [Ajax]
+        [HttpPost]
+        public JsonResult GetOrgCombo()
+        {
+            var list = DbHelper.GetOrgList(null, true);
+            return Json(DbHelper.GetOrgCombo(list));
+        }
+        /// <summary>
+        /// 新增,编辑
+        /// </summary>
+        /// <param name="model">OrgViewModel</param>
+        /// <returns></returns>
+        [Ajax]
+        [HttpPost]
+        public JsonResult Save(OrgViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.ParentId))
+                model.ParentId = "";
+            if (string.IsNullOrEmpty(model.Id))//新增
+            {
+                var org = DbHelper.GetOrg(model.ParentId);
+                if (org == null)
+                    model.Id = model.ParentId + "001";
+                else
+                {
+                    var temp = Int64.Parse(org.Id) + 1;
+                    model.Id = temp.ToString().PadLeft(org.Id.Length, '0');
+                }
+                model.IsDefault = false;
+                model.IsEnable = true;
+                model.CreateDate = DateTime.Now;
+                return Json(DbHelper.SaveOrg(model));
+            }
+            else
+            {
+                var json = DbHelper.EditOrg(model);
+                return Json(json);
+            }
+        }
+        [Ajax]
+        [HttpPost]
+        public JsonResult Del(List<string> id)
+        {
+            var result = DbHelper.DelOrg(id);
             return Json(result);
         }
     }

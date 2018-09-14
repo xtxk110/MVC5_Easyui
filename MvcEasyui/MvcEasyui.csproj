@@ -639,6 +639,7 @@
     <Content Include="Content\themes\material\images\Thumbs.db" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\CustomJs.js" />
+    <Content Include="Scripts\datagrid-defaultview.js" />
     <Content Include="Scripts\easyui-lang-zh_CN.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -668,13 +669,13 @@
     <Content Include="Views\User\Show.cshtml" />
     <Content Include="Views\Shared\DatagridToolBar.cshtml" />
     <Content Include="Views\Shared\DialogButton.cshtml" />
+    <Content Include="Views\Org\Show.cshtml" />
+    <Content Include="Views\Pos\Show.cshtml" />
+    <Content Include="Views\Role\Show.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Views\Org\" />
-    <Folder Include="Views\Pos\" />
     <Folder Include="Views\Right\" />
-    <Folder Include="Views\Role\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />
