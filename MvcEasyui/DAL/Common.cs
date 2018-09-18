@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Web;
 
 namespace MvcEasyui
@@ -29,6 +30,19 @@ namespace MvcEasyui
                 info.Msg= "【" +action+ "】数据失败 "+ext;
             }
             return info;
+        }
+        /// <summary>
+        /// 生成以日期(yyyyMMddHHmm)开头的16位随机数字符
+        /// </summary>
+        /// <returns></returns>
+        public static string NewId()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(DateTime.Now.ToString("yyyyMMddHHmm").ToString());
+            Random rd = new Random(Guid.NewGuid().GetHashCode());
+            sb.Append(rd.Next(1000, 9999).ToString());
+
+            return sb.ToString();
         }
     }
 }

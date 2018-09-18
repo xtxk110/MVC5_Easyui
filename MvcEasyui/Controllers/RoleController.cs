@@ -59,6 +59,8 @@ namespace MvcEasyui.Controllers
         public JsonResult GetAll(string Name)
         {
             var list = DbHelper.GetRoleList(Name, false);
+            foreach (var item in list)
+                item.RightName = DbHelper.GetRightByRole(item.Id);
             return Json(list);
         }
         /// <summary>
@@ -114,6 +116,24 @@ namespace MvcEasyui.Controllers
         {
             var result = DbHelper.DelRole(id);
             return Json(result);
+        }
+        /// <summary>
+        /// 获取可用的权限列表
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Ajax]
+        public JsonResult GetRightCombotree()
+        { 
+            var dataJson = DbHelper.GetTopRightList(this, true);
+            var treeResult = new List<TreeModel>();
+            foreach (var item in dataJson.rows)
+            {
+                TreeModel tree = new TreeModel { id = item.Id, text = item.Name, state = item.state,@checked=item.IsChecked };
+
+                treeResult.Add(tree);
+            }
+            return Json(treeResult);
         }
     }
 }

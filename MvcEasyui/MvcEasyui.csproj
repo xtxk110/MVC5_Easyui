@@ -177,6 +177,8 @@
     <Compile Include="Models\Common\ResultInfo.cs" />
     <Compile Include="Models\OrgViewModel.cs" />
     <Compile Include="Models\PositionalViewModel.cs" />
+    <Compile Include="Models\RightViewModel.cs" />
+    <Compile Include="Models\RoleMenuModel.cs" />
     <Compile Include="Models\RoleViewModel.cs" />
     <Compile Include="Models\Common\TreeModel.cs" />
     <Compile Include="Models\Login\UserInfo.cs" />
@@ -672,10 +674,10 @@
     <Content Include="Views\Org\Show.cshtml" />
     <Content Include="Views\Pos\Show.cshtml" />
     <Content Include="Views\Role\Show.cshtml" />
+    <Content Include="Views\Right\Show.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Views\Right\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />

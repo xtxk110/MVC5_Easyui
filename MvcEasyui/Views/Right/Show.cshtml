@@ -1,0 +1,72 @@
+﻿@{
+    Layout = null;
+}
+@Html.Partial("DatagridToolBar")
+<span id="nodeId" style="display:none"></span>
+<span id="total" style="display:none">0</span>
+<table id="dg_right" class="" title="" fit="true" fitColumns="true"
+       method="post" toolbar="#toolbar" striped="true" rownumbers="true" pagination="true" remoteSort="false" data-options="idField:'Id',treeField:'Name'">
+    <thead>
+        <tr>
+            <th field="checkbox" checkbox="true"></th>
+            <th field="Id" width="0" align="center" hidden="hidden"></th>
+            <th field="Name" width="20" align="center" sortable="true">名称</th>
+            <th field="ParentId" width="10" align="center" sortable="true">父级ID</th>
+            <th field="Type" width="5" align="center" sortable="true" formatter="RightType">权限类型</th>
+            <th field="UrlPath" width="20" align="center" sortable="true">路径</th>
+            <th field="SortIndex" width="5" align="center" sortable="true">排序号</th>
+            <th field="IsEnable" width="5" align="center" sortable="true">是否启用</th>
+            <th field="IsDefault" width="5" align="center" sortable="true">是否预置</th>
+            <th field="CreateDate" width="10" align="center" sortable="true">创建日期</th>
+            <th field="Comment" width="20" align="center">说明</th>
+        </tr>
+    </thead>
+</table>
+@Html.Partial("DialogButton")
+<div id="dialog_add" class="easyui-dialog" headerCls="dialog-panel-title" modal="true" buttons="#buttons" style="padding:10px 10px;"
+     data-options="closed:true">
+    <input id="temp" name="temp" type="hidden" />
+    <form id="fm_add" method="post">
+        <input id="Id" name="Id" type="hidden" />
+        <div id="parent-div" class="user-div">
+            <label for="ParentId" style="display:block;font-size:14px">父级菜单:</label>
+            <input id="ParentId" name="ParentId" data-options="" style="width:300px;height:30px" />
+        </div>
+        <div class="user-div">
+            <label for="Name" style="display:block;font-size:14px">名称:</label>
+            <input id="Name" name="Name" class="easyui-textbox" data-options="required:true" style="width:300px;height:30px; border-radius:5px;">
+        </div>
+        <div id="path-div" class="user-div">
+            <label for="UrlPath" style="display:block;font-size:14px">路径:</label>
+            <input id="UrlPath" name="UrlPath" class="easyui-textbox" data-options="" style="width:300px;height:30px; border-radius:5px;">
+        </div>
+        <div id="type-div" class="user-div">
+            <span style="font-size:14px">权限类型:</span>
+            <span style="display:block;border:1px solid #d4d4d4;width:300px;height:30px; border-radius:5px;vertical-align:middle ">
+                <label for="Type" style="font-size:12px;margin-left:12px">MENU</label>
+                <input id="Type" name="Type" type="radio" value="0" checked="checked">
+                <label for="Type1" style="font-size:12px;margin-left:16px">BUTTON</label>
+                <input id="Type1" name="Type" type="radio" value="1">
+            </span>
+        </div>
+        <div id="sort-div" class="user-div">
+            <label for="SortIndex" style="display:block;font-size:14px">排序号:</label>
+            <input id="SortIndex" name="SortIndex" class="easyui-textbox" data-options="" style="width:300px;height:30px; border-radius:5px;">
+        </div>
+        <div id="comment-div" class="user-div">
+            <label for="Comment" style="display:block;font-size:14px">说明:</label>
+            <input id="Comment" name="Comment" class="easyui-textbox" multiline="true" style="width:300px;height:50px" />
+        </div>
+        <div id="div-enable" style="display:none">
+            <label for="IsEnable" style="font-size:14px;margin-right:10px">是否启用:</label>
+            <input id="IsEnable" name="IsEnable" class="easyui-switchbutton" data-options="onText:'启用',offText:'禁用',value:true" style="height:30px">
+        </div>
+    </form>
+</div>
+<script>
+    $(function () {
+        RightViewInit();
+    });
+</script>
+
+

@@ -177,23 +177,23 @@ namespace MvcEasyui
         /// <param name="list"></param>
         public static void SetOrgTreeList(List<TreeModel> result, List<OrgViewModel> list)
         {
-            var level = list.Where(m => m.Id.Length == 3).ToList();//level1
+            var level = list.Where(m => m.Id.Length == 4).ToList();//level1
             foreach (var item in level)
             {
                 result.Add(new TreeModel { id = item.Id, text = item.Name });
             }
 
-            level = list.Where(m => m.Id.Length == 6).ToList();//level2
+            level = list.Where(m => m.Id.Length == 8).ToList();//level2
             SetTree(result, level);
 
-            level = list.Where(m => m.Id.Length == 9).ToList();//level3
+            level = list.Where(m => m.Id.Length == 12).ToList();//level3
             foreach (var item in result)
             {
                 if (item.children != null)
                     SetTree(item.children, level);
             }
 
-            level = list.Where(m => m.Id.Length == 12).ToList();//level4
+            level = list.Where(m => m.Id.Length == 16).ToList();//level4
             foreach (var item in result)
             {
                 if (item.children != null)
@@ -206,7 +206,7 @@ namespace MvcEasyui
                 }
             }
 
-            level = list.Where(m => m.Id.Length == 15).ToList();//level5
+            level = list.Where(m => m.Id.Length == 20).ToList();//level5
             foreach (var item in result)
             {
                 if (item.children != null)
@@ -227,7 +227,7 @@ namespace MvcEasyui
                 }
             }
 
-            level = list.Where(m => m.Id.Length == 18).ToList();//level6
+            level = list.Where(m => m.Id.Length == 24).ToList();//level6
             foreach (var item in result)
             {
                 if (item.children != null)
@@ -452,7 +452,7 @@ namespace MvcEasyui
                 sql = sql + " ORDER BY b.Id ";
                 var list = conn.Query<PositionalViewModel>(sql, parameters).ToList();
                 if (string.IsNullOrEmpty(posId))
-                    list = list.Where(m => m.Id.Length == 3).ToList();//获取第一级
+                    list = list.Where(m => m.Id.Length == 4).ToList();//获取第一级
                 return list;
             }
         }
@@ -677,6 +677,7 @@ namespace MvcEasyui
         /// <returns></returns>
         public static ResultInfo SaveRole(RoleViewModel model)
         {
+            IDbTransaction tran = null;
             try
             {
                 using (IDbConnection conn = DbConnection.Instance())
@@ -685,15 +686,26 @@ namespace MvcEasyui
                     var list = conn.Query<RoleViewModel>(sql, model).ToList();
                     if (list.Count > 0)
                         return Common.AjaxInfo(-1, "INSERT", "角色名重复");
-
+                    tran = conn.BeginTransaction();
                     list = null;
-                    sql = "INSERT INTO Sys_Role VALUES(@Id,@Name,@IsDefault,@IsEnable,@Comment,@CreateDate) ";
-                    int result = conn.Execute(sql, model);
+                    sql = "DELETE FROM Sys_RoleMenu WHERE RoleId=@Id  INSERT INTO Sys_Role VALUES(@Id,@Name,@IsDefault,@IsEnable,@Comment,@CreateDate) ";
+                    int result = conn.Execute(sql, model,transaction:tran);
+                    if (model.RightId.Count > 0)
+                    {
+                        model.RoleMenuList = new List<RoleMenuModel>();
+                        string sql1 = "INSERT Sys_RoleMenu VALUES (@Id,@MenuId,@RoleId,@CreateDate)";
+                        foreach (var item in model.RightId)
+                            model.RoleMenuList.Add(new RoleMenuModel { Id = Common.NewId(), RoleId = model.Id, MenuId = item, CreateDate = DateTime.Now });
+                        result += conn.Execute(sql1, model.RoleMenuList, transaction:tran);
+                    }
+                    tran.Commit();
+
                     return Common.AjaxInfo(result, "INSERT");
                 }
             }
             catch(Exception e)
             {
+                tran.Rollback();
                 return Common.AjaxInfo(-1, "INSERT", e.Message);
             }
         }
@@ -704,16 +716,30 @@ namespace MvcEasyui
         /// <returns></returns>
         public static ResultInfo EditRole(RoleViewModel model)
         {
+            IDbTransaction tran = null;
             try
             {
                 using (IDbConnection conn = DbConnection.Instance())
                 {
-                    string sql = "UPDATE Sys_Role SET Name=@Name,Comment=@Comment,IsEnable=@IsEnable WHERE Id=@Id ";
-                    int result = conn.Execute(sql, model);
+                    tran = conn.BeginTransaction();
+                    string sql = " UPDATE Sys_Role SET Name=@Name,Comment=@Comment,IsEnable=@IsEnable WHERE Id=@Id ";
+                    if (string.IsNullOrEmpty(model.Name)&&model.RightId!=null&&model.RightId.Count > 0)
+                        sql = "DELETE FROM Sys_RoleMenu WHERE RoleId=@Id ";
+                    int result = conn.Execute(sql, model,transaction:tran);
+                    if (model.RightId != null&&model.RightId.Count > 0)
+                    {
+                        model.RoleMenuList = new List<RoleMenuModel>();
+                        string sql1 = "INSERT Sys_RoleMenu VALUES (@Id,@MenuId,@RoleId,@CreateDate)";
+                        foreach (var item in model.RightId)
+                            model.RoleMenuList.Add(new RoleMenuModel { Id = Common.NewId(), RoleId = model.Id, MenuId = item, CreateDate = DateTime.Now });
+                        result += conn.Execute(sql1, model.RoleMenuList,transaction:tran);
+                    }
+                    tran.Commit();
+
                     return Common.AjaxInfo(result, "UPDATE");
                 }
             }
-            catch (Exception e) { return Common.AjaxInfo(-1, "UPDATE", e.Message); }
+            catch (Exception e) { tran.Rollback(); return Common.AjaxInfo(-1, "UPDATE", e.Message); }
         }
 
         public static ResultInfo DelRole(List<string> roleId)
@@ -728,7 +754,7 @@ namespace MvcEasyui
                         return Common.AjaxInfo(-1, "DELETE", "角色包含用户,不能删除");
 
                     list = null;
-                    sql = "DELETE FROM Sys_Role WHERE Id IN @roleId ";
+                    sql = "DELETE FROM Sys_Role WHERE Id IN @roleId  DELETE FROM Sys_RoleMenu WHERE RoleId IN @roleId";
                     int result = conn.Execute(sql, new { roleId = roleId });
                     return Common.AjaxInfo(result, "DELETE");
                 }
@@ -737,9 +763,132 @@ namespace MvcEasyui
                 return Common.AjaxInfo(-1, "DELETE", e.Message);
             }
         }
+        /// <summary>
+        /// 通过角色ID获取匹配的权限名称
+        /// </summary>
+        /// <param name="roleId">角色ID</param>
+        /// <returns></returns>
+        public static List<string> GetRightByRole(string roleId)
+        {
+            string sql = "SELECT a.Name FROM Sys_Menu a INNER JOIN Sys_RoleMenu b ON a.Id=b.MenuId WHERE b.RoleId = @roleId";
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                var list = conn.Query<string>(sql, new { roleId = roleId }).ToList();
+                return list;
+            }
+        }
         #endregion
 
         #region 权限菜单
+        /// <summary>
+        /// 获取顶级菜单项
+        /// </summary>
+        /// <param name="current">BaseController</param>
+        /// <param name="onlyEnable">是否只查询可用的权限菜单</param>
+        /// <returns></returns>
+        public static DatagridJson<RightViewModel> GetTopRightList(BaseController current,bool onlyEnable)
+        {
+            DatagridJson<RightViewModel> result = new DatagridJson<RightViewModel>();
+            result.total = current.Total;
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                DynamicParameters parameters = new DynamicParameters();
+                parameters.CreatePager(current.PageIndex, current.PageSize);
+                parameters.Add("@total", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                parameters.Add("isOnlyEnable", onlyEnable);
+                parameters.Add("@name", current.Request["Name"]);
+                parameters.Add("@rightId", current.Request["id"]);//当前选择的权限ID，用于获取下级列表
+                parameters.Add("@roleId", current.Request["roleId"]);//查询权限是否属于此角色
+                result.rows = conn.Query<RightViewModel>("sp_GetTopRightList", parameters, commandType: CommandType.StoredProcedure).ToList();
+                if (string.IsNullOrEmpty(current.Request["id"]))
+                {
+                    if (current.PageIndex == 1)
+                        result.total = parameters.Get<int>("@total");
+                }
+                else
+                {
+                    result.total = result.rows.Count;
+                }
+                
+
+            }
+            return result;
+        }
+        /// <summary>
+        /// 删除权限
+        /// </summary>
+        /// <param name="menuid">权限ID</param>
+        /// <returns></returns>
+        public static ResultInfo DelRight(List<string> menuid)
+        {
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string sql = "SELECT * FROM Sys_RoleMenu WHERE MenuId in @menuId ";
+                    var list = conn.Query<string>(sql, new { menuId = menuid }).ToList();
+                    if (list.Count > 0)
+                        return Common.AjaxInfo(-1, "DELETE", "权限已分发,不能删除");
+
+                    list = null;
+                    sql = "DELETE FROM Sys_Menu WHERE Id IN  @menuId ";
+                    int result = conn.Execute(sql, new { menuId = menuid });
+                    return Common.AjaxInfo(result, "DELETE");
+                }
+            }
+            catch (Exception e)
+            {
+                return Common.AjaxInfo(-1, "DELETE", e.Message);
+            }
+        }
+        /// <summary>
+        /// 保存权限
+        /// </summary>
+        /// <param name="model">RightViewModel</param>
+        /// <returns></returns>
+        public static ResultInfo SaveRight(RightViewModel model)
+        {
+            IDbTransaction tran = null;
+            try
+            {
+                using (IDbConnection conn = DbConnection.Instance())
+                {
+                    string sql = "SELECT * FROM Sys_Menu WHERE Name=@Name ";
+                    var list = conn.Query<RightViewModel>(sql, model).ToList();
+                    if (list.Count > 0)
+                        return Common.AjaxInfo(-1, "INSERT", "权限名称重复");
+                    tran = conn.BeginTransaction();
+                    list = null;
+                    sql = "INSERT INTO Sys_Menu VALUES(@Id,@ParentId,@Type,@Name,@Path,@IsDefault,@IsEnable,@SortIndex,@Comment,@CreateDate) ";
+                    int result = conn.Execute(sql, model, transaction: tran);
+                    tran.Commit();
+
+                    return Common.AjaxInfo(result, "INSERT");
+                }
+            }
+            catch (Exception e)
+            {
+                tran.Rollback();
+                return Common.AjaxInfo(-1, "INSERT", e.Message);
+            }
+        }
+        /// <summary>
+        /// 通过权限同父级权限下ID值排序最大对象
+        /// </summary>
+        /// <param name="parentId">父级ID</param>
+        /// <returns></returns>
+        public static RightViewModel GetRight(string parentId)
+        {
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                string sql = "SELECT TOP 1 * FROM Sys_Menu WHERE ISNULL(ParentId, '') = @parentId ORDER BY Id DESC ";
+                var list = conn.Query<RightViewModel>(sql, new { parentId = parentId }).ToList();
+                if (list.Count > 0)
+                    return list[0];
+                else
+                    return null;
+            }
+        }
         #endregion
 
     }

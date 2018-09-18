@@ -22,7 +22,7 @@ namespace MvcEasyui
                 if (string.IsNullOrWhiteSpace(Request["rows"]))
                 {
                     if (string.IsNullOrWhiteSpace(Request["PageSize"]))
-                        return 10;
+                        return 1000;
                     else
                         return int.Parse(Request["PageSize"]);
                 }

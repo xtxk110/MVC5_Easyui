@@ -90,7 +90,7 @@ namespace MvcEasyui.Controllers
             {
                 var org = DbHelper.GetPos(model.ParentId);
                 if (org == null)
-                    model.Id = model.ParentId + "001";
+                    model.Id = model.ParentId + "0001";
                 else
                 {
                     var temp = Int64.Parse(org.Id) + 1;

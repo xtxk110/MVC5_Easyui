@@ -9,11 +9,13 @@
         <tr>
             <th field="checkbox" checkbox="true"></th>
             <th field="Id" width="0" align="center" hidden="hidden"></th>
-            <th field="Name" width="10" align="center" sortable="true">角色</th>
-            <th field="IsEnable" width="5" align="center" sortable="true">是否启用</th>
-            <th field="IsDefault" width="5" align="center" sortable="true">是否预置</th>
-            <th field="CreateDate" width="10" align="center" sortable="true">创建日期</th>
-            <th field="Comment" width="20" align="center">说明</th>
+            <th field="RightName" width="0" align="center" hidden="hidden"></th>
+            <th field="Name" width="20" align="center" sortable="true" formatter=ShowRight>角色</th>
+            <th field="IsEnable" width="10" align="center" sortable="true">是否启用</th>
+            <th field="IsDefault" width="10" align="center" sortable="true">是否预置</th>
+            <th field="CreateDate" width="20" align="center" sortable="true">创建日期</th>
+            <th field="Comment" width="30" align="center">说明</th>
+            <th field="Operator" width="10" align="center" formatter="EditRight">操作</th>
         </tr>
     </thead>
 </table>
@@ -23,9 +25,16 @@
     <input id="temp" name="temp" type="hidden" />
     <form id="fm_add" method="post">
         <input id="Id" name="Id" type="hidden" />
-        <div class="user-div">
+        <div id="name-div" class="user-div">
             <label for="Name" style="display:block;font-size:14px">角色:</label>
             <input id="Name" name="Name" class="easyui-textbox" data-options="required:true" style="width:300px;height:30px; border-radius:5px;">
+        </div>
+        <div id="right-div" class="user-div" style="display:none">
+            <label for="Rights" style="display:block;font-size:14px">权限:</label>
+            <div style="border:1px solid #d4d4d4;overflow-y:auto; overflow-x:hidden;border-radius:5px ">
+                <ul id="Rights" name="Rights" style="width:300px;height:400px"></ul>
+            </div>
+
         </div>
         <div id="comment-div" class="user-div">
             <label for="Comment" style="display:block;font-size:14px">说明:</label>
@@ -35,6 +44,7 @@
             <label for="IsEnable" style="font-size:14px;margin-right:10px">是否启用:</label>
             <input id="IsEnable" name="IsEnable" class="easyui-switchbutton" data-options="onText:'启用',offText:'禁用',value:true" style="height:30px">
         </div>
+        
     </form>
 </div>
 <script>

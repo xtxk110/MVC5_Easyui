@@ -11,11 +11,11 @@ namespace MvcEasyui.Models
     public class RoleViewModel
     {
         /// <summary>
-        /// 部门ID
+        /// 角色ID
         /// </summary>
         public string Id { get; set; }
         /// <summary>
-        /// 部门名称
+        /// 角色名称
         /// </summary>
         public string Name { get; set; }
         /// <summary>
@@ -31,5 +31,17 @@ namespace MvcEasyui.Models
         /// </summary>
         public string Comment { get; set; }
         public DateTime CreateDate { get; set; }
+        /// <summary>
+        /// 角色对应的权限ID列表
+        /// </summary>
+        public List<string> RightId { get; set; }
+        /// <summary>
+        /// 角色对应的权限名称列表
+        /// </summary>
+        public List<string> RightName { get; set; }
+        /// <summary>
+        /// 角色权限映射模型
+        /// </summary>
+        public List<RoleMenuModel> RoleMenuList { get; set; }
     }
 }
