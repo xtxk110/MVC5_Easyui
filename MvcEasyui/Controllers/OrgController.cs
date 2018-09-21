@@ -19,13 +19,18 @@ namespace MvcEasyui.Controllers
         {
             return View();
         }
+        /// <summary>
+        /// 返回 TreeModel格式的数据
+        /// </summary>
+        /// <returns></returns>
         [Ajax]
         [HttpPost]
         public JsonResult Get()
         {
-            List<OrgViewModel> list = DbHelper.GetOrgList(null,true);
+            List<OrgViewModel> all = DbHelper.GetOrgList(null,true);
+            List<OrgViewModel> first = all.Where(m => string.IsNullOrEmpty(m.ParentId)).ToList();
             List<TreeModel> result = new List<TreeModel>();
-            DbHelper.SetOrgTreeList(result, list);
+            DbHelper.SetTreeList(result, all.ToList<OrgViewModel,BaseModel>(),first.ToList<OrgViewModel, BaseModel>());
             return Json(result);
         }
         [Ajax]

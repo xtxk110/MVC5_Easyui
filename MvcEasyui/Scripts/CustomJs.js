@@ -307,7 +307,7 @@ function OrgViewInit() {
         $("#div-enable").hide();
         $("#Id").val("");
         $("#dialog_add").dialog({
-            title: '增加用户',
+            title: '增加部门',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
     });
@@ -326,7 +326,7 @@ function OrgViewInit() {
         $("#comment-div").show();
         $("#div-parent").hide();
         $("#dialog_add").dialog({
-            title: '编辑用户',
+            title: '编辑部门',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
         $("#Id").val(rows[0].Id);
@@ -343,7 +343,7 @@ function OrgViewInit() {
         $("#div-parent").hide();
         $("#Name").textbox({ required: false });
         $("#dialog_add").dialog({
-            title: '查询用户',
+            title: '查询部门',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
         $("#Name").textbox('setText', $("#temp").val());
@@ -455,7 +455,7 @@ function PosViewInit() {
         $("#div-enable").hide();
         $("#Id").val("");
         $("#dialog_add").dialog({
-            title: '增加用户',
+            title: '增加职位',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
     });
@@ -474,7 +474,7 @@ function PosViewInit() {
         $("#comment-div").show();
         $("#div-parent").hide();
         $("#dialog_add").dialog({
-            title: '编辑用户',
+            title: '编辑职位',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
         $("#Id").val(rows[0].Id);
@@ -491,7 +491,7 @@ function PosViewInit() {
         $("#div-parent").hide();
         $("#Name").textbox({ required: false });
         $("#dialog_add").dialog({
-            title: '查询用户',
+            title: '查询职位',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
         $("#Name").textbox('setText', $("#temp").val());
@@ -637,7 +637,7 @@ function RoleViewInit() {
         $("#Id").val("");
         $("#Rights").tree({ url: '/Role/GetRightCombotree', checkbox: true, lines: true});
         $("#dialog_add").dialog({
-            title: '增加用户',
+            title: '增加角色',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
     });
@@ -663,7 +663,7 @@ function RoleViewInit() {
         $("#comment-div").show();
         $("#right-div").hide();
         $("#dialog_add").dialog({
-            title: '编辑用户',
+            title: '编辑角色',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
         $("#Id").val(rows[0].Id);
@@ -681,7 +681,7 @@ function RoleViewInit() {
         $("#right-div").hide();
         $("#Name").textbox({ required: false });
         $("#dialog_add").dialog({
-            title: '查询用户',
+            title: '查询角色',
             onBeforeClose: FormClear('fm_add')
         }).dialog('open');
         $("#Name").textbox('setText', $("#temp").val());

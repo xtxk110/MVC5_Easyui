@@ -8,9 +8,8 @@ namespace MvcEasyui.Models
     /// <summary>
     /// 用户界面模型
     /// </summary>
-    public class UserViewModel
+    public class UserViewModel:BaseModel
     {
-        public string Id { get; set; }
         /// <summary>
         /// 账号
         /// </summary>
@@ -19,10 +18,6 @@ namespace MvcEasyui.Models
         /// 口令
         /// </summary>
         public string Pwd { get; set; }
-        /// <summary>
-        /// 姓名
-        /// </summary>
-        public string Name { get; set; }
         /// <summary>
         /// 组织部门ID
         /// </summary>
@@ -55,7 +50,6 @@ namespace MvcEasyui.Models
         /// 说明
         /// </summary>
         public string Comment { get; set; }
-        public DateTime CreateDate { get; set; }
         /// <summary>
         /// 用户对应的角色名称;返回显示使用
         /// </summary>

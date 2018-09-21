@@ -19,14 +19,20 @@ namespace MvcEasyui.Controllers
         {
             return View();
         }
+        /// <summary>
+        /// 返回TreeModel格式的数据列表
+        /// </summary>
+        /// <returns></returns>
         [Ajax]
         [HttpPost]
         public JsonResult Get()
         {
-            string posId = Request["id"];
-            List<PositionalViewModel> list = DbHelper.GetPosList(posId,true);
+            //string posId = Request["id"];
+            //List<PositionalViewModel> list = DbHelper.GetPosList(posId,true);
+            List<PositionalViewModel> all = DbHelper.GetPosALL(null, true);
+            List<PositionalViewModel> first = all.Where(m => string.IsNullOrEmpty(m.Id)).ToList();
             List<TreeModel> result = new List<TreeModel>();
-            DbHelper.SetPosTreeList(result, list);
+            DbHelper.SetTreeList(result,all.ToList<PositionalViewModel,BaseModel>(),first.ToList<PositionalViewModel, BaseModel>());
             return Json(result);
         }
         [Ajax]

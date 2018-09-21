@@ -125,14 +125,11 @@ namespace MvcEasyui.Controllers
         [Ajax]
         public JsonResult GetRightCombotree()
         { 
-            var dataJson = DbHelper.GetTopRightList(this, true);
+            var all = DbHelper.GetAllRights(this, true);
+            List<RightViewModel> first = all.Where(m => string.IsNullOrEmpty(m.ParentId)).ToList();
             var treeResult = new List<TreeModel>();
-            foreach (var item in dataJson.rows)
-            {
-                TreeModel tree = new TreeModel { id = item.Id, text = item.Name, state = item.state,@checked=item.IsChecked };
-
-                treeResult.Add(tree);
-            }
+            DbHelper.SetTreeList(treeResult, all.ToList<RightViewModel, BaseModel>(), first.ToList<RightViewModel, BaseModel>());
+            
             return Json(treeResult);
         }
     }

@@ -171,6 +171,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\BaseModel.cs" />
     <Compile Include="Models\Common\ComboboxModel.cs" />
     <Compile Include="Models\Common\DatagridFields.cs" />
     <Compile Include="Models\Common\DatagridJson.cs" />
@@ -641,7 +642,6 @@
     <Content Include="Content\themes\material\images\Thumbs.db" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\CustomJs.js" />
-    <Content Include="Scripts\datagrid-defaultview.js" />
     <Content Include="Scripts\easyui-lang-zh_CN.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />

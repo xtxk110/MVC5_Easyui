@@ -6,7 +6,7 @@ using System.Web;
 
 namespace MvcEasyui
 {
-    public class Common
+    public static class Common
     {
         /// <summary>
         /// ajax访问返回特定信息(不包括数据查询)
@@ -43,6 +43,23 @@ namespace MvcEasyui
             sb.Append(rd.Next(1000, 9999).ToString());
 
             return sb.ToString();
+        }
+
+        public static List<TResult> ToList<TSource,TResult>(this IEnumerable<TSource> source) where TResult:class
+        {
+            List<TResult> result = new List<TResult>();
+            if(source != null)
+            {
+                foreach (TSource item in source)
+                {
+                    TResult r = item as TResult;
+                    if (r == null)
+                        break;
+                    else
+                        result.Add(r);
+                }
+            }
+            return result;
         }
     }
 }

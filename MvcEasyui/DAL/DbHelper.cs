@@ -14,6 +14,33 @@ namespace MvcEasyui
 {
     public class DbHelper
     {
+        #region 公用
+        /// <summary>
+        /// BaseModel基类转换成TREE结构
+        /// </summary>
+        /// <param name="result">待返回的TreeModel集合</param>
+        /// <param name="all">BaseModel 数据集</param>
+        ///<param name="current">BaseModel 当前层级数据集(默认是第一层的数据)</param>
+        public static void SetTreeList(List<TreeModel> result, List<BaseModel> all, List<BaseModel> current)
+        {
+            foreach (var item in current)
+            {
+                TreeModel tree = new TreeModel { id = item.Id, text = item.Name, children = new List<TreeModel>(),@checked=item.IsChecked };
+                result.Add(tree);
+                if (item.SubCount == 0)
+                    tree.state = "open";
+                else
+                {
+                    tree.state = "closed";
+                    var cur = all.Where(m => m.ParentId == item.Id).ToList();
+
+                    SetTreeList(tree.children, all, cur);
+                }
+            }
+        }
+
+        #endregion
+
         #region 用户操作
         /// <summary>
         /// 获取用户列表
@@ -170,107 +197,7 @@ namespace MvcEasyui
                 return conn.Query<OrgViewModel>("sp_GetOrgList", new { isOnlyEnable = onlyEnable, name = orgName }, commandType: CommandType.StoredProcedure).ToList();
             }
         }
-        /// <summary>
-        /// 组织部门转换成TREE结构
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="list"></param>
-        public static void SetOrgTreeList(List<TreeModel> result, List<OrgViewModel> list)
-        {
-            var level = list.Where(m => m.Id.Length == 4).ToList();//level1
-            foreach (var item in level)
-            {
-                result.Add(new TreeModel { id = item.Id, text = item.Name });
-            }
-
-            level = list.Where(m => m.Id.Length == 8).ToList();//level2
-            SetTree(result, level);
-
-            level = list.Where(m => m.Id.Length == 12).ToList();//level3
-            foreach (var item in result)
-            {
-                if (item.children != null)
-                    SetTree(item.children, level);
-            }
-
-            level = list.Where(m => m.Id.Length == 16).ToList();//level4
-            foreach (var item in result)
-            {
-                if (item.children != null)
-                {
-                    foreach (var item1 in item.children)
-                    {
-                        if (item1.children != null)
-                            SetTree(item1.children, level);
-                    }
-                }
-            }
-
-            level = list.Where(m => m.Id.Length == 20).ToList();//level5
-            foreach (var item in result)
-            {
-                if (item.children != null)
-                {
-                    foreach (var item1 in item.children)
-                    {
-                        if (item1.children != null)
-                        {
-                            foreach (var item2 in item1.children)
-                            {
-                                if (item2.children != null)
-                                    SetTree(item2.children, level);
-                            }
-
-                        }
-
-                    }
-                }
-            }
-
-            level = list.Where(m => m.Id.Length == 24).ToList();//level6
-            foreach (var item in result)
-            {
-                if (item.children != null)
-                {
-                    foreach (var item1 in item.children)
-                    {
-                        if (item1.children != null)
-                        {
-                            foreach (var item2 in item1.children)
-                            {
-                                if (item2.children != null)
-                                {
-                                    foreach (var item3 in item2.children)
-                                    {
-                                        if (item3.children != null)
-                                            SetTree(item3.children, level);
-                                    }
-                                }
-                            }
-
-                        }
-
-                    }
-                }
-            }
-
-        }
-        private static void SetTree(List<TreeModel> tree, List<OrgViewModel> levelList)
-        {
-            foreach (var item in tree)
-            {
-                foreach (var item1 in levelList)
-                {
-                    if (item.id == item1.ParentId)
-                    {
-                        if (item.children == null)
-                            item.children = new List<TreeModel> { new TreeModel { id = item1.Id, text = item1.Name } };
-                        else
-                            item.children.Add(new TreeModel { id = item1.Id, text = item1.Name });
-                    }
-                }
-            }
-        }
+        
         /// <summary>
         /// 获取相应部门的用户,包括下级部门
         /// </summary>
@@ -456,32 +383,18 @@ namespace MvcEasyui
                 return list;
             }
         }
-
+        /// <summary>
+        /// 获取所有职位列表,数量不会很多,不分页
+        /// </summary>
+        /// <param name="posName">职位名称</param>
+        /// <param name="onlyEnable">是否只查询可用的</param>
+        /// <returns></returns>
         public static List<PositionalViewModel> GetPosALL(string posName,bool onlyEnable)
         {
             using (IDbConnection conn = DbConnection.Instance())
             {
                 return conn.Query<PositionalViewModel>("sp_GetPosList", new { isOnlyEnable = onlyEnable, name = posName }, commandType: CommandType.StoredProcedure).ToList();
             }
-        }
-
-        /// <summary>
-        ///职位转换成TREE结构
-        /// </summary>
-        /// <param name="result"></param>
-        /// <param name="list"></param>
-        public static void SetPosTreeList(List<TreeModel> result, List<PositionalViewModel> list)
-        {
-            foreach (var item in list)
-            {
-                TreeModel tree = new TreeModel { id = item.Id, text = item.Name };
-                if (item.SubCount > 0)
-                    tree.state = "closed";
-                else
-                    tree.state = "open";
-                result.Add(tree);
-            }
-
         }
         /// <summary>
         /// 获取对应职位的用户,包含下级职位
@@ -813,6 +726,23 @@ namespace MvcEasyui
 
             }
             return result;
+        }
+        /// <summary>
+        /// 获取所有权限
+        /// </summary>
+        /// <param name="current">BaseController</param>
+        /// <param name="onlyEnable">是否只查询可用的权限</param>
+        /// <returns></returns>
+        public static List<RightViewModel> GetAllRights(BaseController current, bool onlyEnable)
+        {
+            using (IDbConnection conn = DbConnection.Instance())
+            {
+                DynamicParameters parameters = new DynamicParameters();
+                parameters.Add("isOnlyEnable", onlyEnable);
+                parameters.Add("@roleId", current.Request["roleId"]);//查询权限是否属于此角色
+                var result = conn.Query<RightViewModel>("sp_GetTopRightList", parameters, commandType: CommandType.StoredProcedure).ToList();
+                return result;
+            }
         }
         /// <summary>
         /// 删除权限

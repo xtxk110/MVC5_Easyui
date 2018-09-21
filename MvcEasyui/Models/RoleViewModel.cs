@@ -8,16 +8,8 @@ namespace MvcEasyui.Models
     /// <summary>
     /// 角色模板
     /// </summary>
-    public class RoleViewModel
+    public class RoleViewModel:BaseModel
     {
-        /// <summary>
-        /// 角色ID
-        /// </summary>
-        public string Id { get; set; }
-        /// <summary>
-        /// 角色名称
-        /// </summary>
-        public string Name { get; set; }
         /// <summary>
         /// 是否启用
         /// </summary>
@@ -30,7 +22,6 @@ namespace MvcEasyui.Models
         /// 说明
         /// </summary>
         public string Comment { get; set; }
-        public DateTime CreateDate { get; set; }
         /// <summary>
         /// 角色对应的权限ID列表
         /// </summary>

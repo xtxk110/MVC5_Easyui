@@ -9,7 +9,7 @@ namespace MvcEasyui.Models
     /// <summary>
     /// 权限模型
     /// </summary>
-    public class RightViewModel
+    public class RightViewModel:BaseModel
     {
         /// <summary>
         /// easyui tree 默认使用id
@@ -20,21 +20,9 @@ namespace MvcEasyui.Models
         /// </summary>
         public string state { get; set; }
         /// <summary>
-        /// 主键ID
-        /// </summary>
-        public string Id { get; set; }
-        /// <summary>
-        /// 父级ID
-        /// </summary>
-        public string ParentId { get; set; }
-        /// <summary>
         /// 权限类型:0为MENU菜单类型;1为BUTTON 页面里的按钮功能类型
         /// </summary>
         public int Type { get; set; }
-        /// <summary>
-        /// 名称
-        /// </summary>
-        public string Name { get; set; }
         /// <summary>
         /// 页面路径
         /// </summary>
@@ -55,15 +43,5 @@ namespace MvcEasyui.Models
         /// 备注
         /// </summary>
         public string Comment { get; set; }
-        /// <summary>
-        /// 创建日期
-        /// </summary>
-        public DateTime CreateDate { get; set; }
-        /// <summary>
-        /// 子级数量
-        /// </summary>
-        public int SubCount { get; set; }
-        [JsonProperty("checked")]
-        public bool IsChecked { get; set; }
     }
 }

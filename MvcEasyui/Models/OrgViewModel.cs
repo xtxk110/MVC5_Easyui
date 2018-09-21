@@ -8,20 +8,8 @@ namespace MvcEasyui.Models
     /// <summary>
     /// 组织部门模型
     /// </summary>
-    public class OrgViewModel
+    public class OrgViewModel:BaseModel
     {
-        /// <summary>
-        /// 部门ID
-        /// </summary>
-        public string Id { get; set; }
-        /// <summary>
-        /// 上级部门ID,最顶层为NULL
-        /// </summary>
-        public string ParentId { get; set; }
-        /// <summary>
-        /// 部门名称
-        /// </summary>
-        public string Name { get; set; }
         /// <summary>
         /// 是否启用
         /// </summary>
@@ -34,10 +22,6 @@ namespace MvcEasyui.Models
         /// 说明
         /// </summary>
         public string Comment { get; set; }
-        /// <summary>
-        /// 子级数量
-        /// </summary>
-        public int SubCount { get; set; }
-        public DateTime CreateDate { get; set; }
+        
     }
 }
